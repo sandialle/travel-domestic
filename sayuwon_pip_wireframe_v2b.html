@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사유원 상세페이지 와이어프레임 v2-b — 기획서 이미지 섹션 포함</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #F0EFEB;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  /* ── 레이아웃 ── */
+  .workspace { display: flex; gap: 0; min-height: 100vh; }
+
+  /* ── 사이드바 ── */
+  .sidebar {
+    width: 250px;
+    min-width: 250px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 28px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #555; margin-bottom: 5px; }
+  .sidebar-title { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 3px; }
+  .sidebar-sub { font-size: 10px; color: #555; margin-bottom: 24px; }
+  .sidebar-divider { height: 1px; background: #2a2a2a; margin: 14px 0; }
+  .sidebar-section-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #444; margin-bottom: 8px; margin-top: 4px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 5px; cursor: pointer;
+    text-decoration: none; color: #777; font-size: 11.5px; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: #252525; color: #fff; }
+  .nav-item.active { background: #2d2d2d; color: #fff; }
+  .nav-num {
+    width: 16px; height: 16px; border-radius: 3px; background: #2a2a2a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #666; flex-shrink: 0;
+  }
+  .nav-item.active .nav-num { background: #fff; color: #1a1a1a; }
+  .nav-item.nav-img .nav-num { background: #1a3a1a; color: #7fba7f; }
+  .nav-item.nav-img { color: #7fba7f; }
+  .nav-item.nav-img:hover { background: #1a2a1a; color: #a8d8a8; }
+
+  .version-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #2a4a2a; border-radius: 4px; padding: 4px 8px;
+    font-size: 10px; color: #7fba7f; margin-top: 6px; margin-bottom: 12px;
+  }
+  .version-badge b { color: #a8d8a8; }
+
+  .diff-item {
+    font-size: 10px; color: #666; padding: 4px 0;
+    border-bottom: 1px solid #242424; line-height: 1.5;
+  }
+  .diff-item:last-child { border-bottom: none; }
+  .diff-item b { color: #aaa; }
+  .diff-item b.green { color: #7fba7f; }
+
+  .sidebar-meta { margin-top: auto; padding-top: 16px; border-top: 1px solid #2a2a2a; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-bottom: 4px; }
+  .meta-row span:last-child { color: #666; }
+
+  /* ── 메인 캔버스 ── */
+  .canvas { flex: 1; padding: 36px 44px; overflow-y: auto; }
+  .canvas-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+  .canvas-header h1 { font-size: 13px; font-weight: 600; letter-spacing: 0.05em; color: #333; }
+  .canvas-header span { font-size: 11px; color: #999; }
+
+  /* ── 폰 프레임 ── */
+  .phone-wrap { display: flex; justify-content: center; gap: 44px; flex-wrap: wrap; }
+  .phone-group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-group-label { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; font-weight: 600; }
+
+  .phone {
+    width: 320px; background: #fff; border-radius: 36px;
+    border: 2px solid #ccc; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  }
+  .phone-notch { height: 32px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; }
+  .notch-dot { width: 56px; height: 5px; background: #333; border-radius: 3px; }
+  .phone-content { padding: 0; overflow: hidden; }
+
+  /* ── 섹션 헤더 (디버그용) ── */
+  .section-head { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: #1a1a1a; color: #fff; }
+  .section-head-num { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; }
+  .section-head-title { font-size: 9px; letter-spacing: 0.04em; color: #bbb; }
+
+  /* 이미지 섹션 헤더 — 초록색 */
+  .section-head.img-head { background: #1a3a1a; }
+  .section-head.img-head .section-head-num { color: #7fba7f; }
+  .section-head.img-head .section-head-title { color: #a8d8a8; }
+
+  /* ── 섹션 공통 ── */
+  .section { padding: 16px 16px; border-bottom: 1px solid #f0f0f0; position: relative; }
+  .section:last-child { border-bottom: none; }
+
+  /* ── 와이어프레임 요소 ── */
+  .wf-img {
+    background: #E8E8E4; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; position: relative; overflow: hidden;
+  }
+  .wf-img::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(135deg, transparent 49.5%, #D8D8D4 49.5%, #D8D8D4 50.5%, transparent 50.5%),
+      linear-gradient(45deg, transparent 49.5%, #D8D8D4 49.5%, #D8D8D4 50.5%, transparent 50.5%);
+  }
+  .wf-img-label {
+    font-size: 9.5px; color: #999; position: relative; z-index: 1;
+    background: rgba(255,255,255,0.75); padding: 2px 8px; border-radius: 3px; text-align: center;
+  }
+  .wf-h1 { font-size: 18px; font-weight: 800; line-height: 1.3; color: #1a1a1a; letter-spacing: -0.02em; }
+  .wf-h2 { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+  .wf-body { font-size: 11.5px; color: #555; line-height: 1.7; }
+  .wf-caption { font-size: 10px; color: #888; line-height: 1.6; }
+  .wf-divider { height: 1px; background: #f0f0f0; margin: 12px 0; }
+
+  /* 탑바 */
+  .phone-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; border-bottom: 1px solid #f0f0f0;
+  }
+  .topbar-back { font-size: 18px; color: #555; }
+  .topbar-title { font-size: 12px; font-weight: 700; color: #1a1a1a; flex: 1; text-align: center; }
+  .topbar-icons { display: flex; gap: 8px; }
+  .topbar-icon { width: 22px; height: 22px; border-radius: 4px; background: #f0f0f0; }
+
+  /* 상단 정보 영역 */
+  .info-area { padding: 14px 16px 10px; }
+  .info-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .region-tag { font-size: 10px; color: #888; }
+  .d-badge { background: #1a1a1a; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .product-name { font-size: 17px; font-weight: 800; color: #1a1a1a; line-height: 1.3; letter-spacing: -0.02em; margin-bottom: 5px; }
+  .product-sub { font-size: 11px; color: #888; margin-bottom: 10px; }
+  .info-row2 { display: flex; flex-direction: column; gap: 3px; }
+  .info-date { font-size: 11.5px; font-weight: 700; color: #1a1a1a; }
+  .info-depart { font-size: 10.5px; color: #666; }
+
+  /* 알림 배너 */
+  .notice-banner {
+    margin: 0 16px 12px; background: #f4f4f2; border-radius: 8px; padding: 10px 12px;
+    border-left: 3px solid #aaa;
+  }
+  .notice-banner-head { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: #444; margin-bottom: 5px; }
+  .notice-banner-body { font-size: 10px; color: #555; line-height: 1.6; }
+  .notice-bullet { display: flex; gap: 4px; font-size: 10px; color: #777; margin-top: 3px; }
+
+  /* Time Table */
+  .timetable-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .timetable-date { font-size: 11px; font-weight: 600; color: #1a1a1a; }
+  .timetable-seat-price { text-align: right; }
+  .seat-remain { font-size: 10px; color: #e05555; margin-bottom: 1px; }
+  .price-text { font-size: 13px; font-weight: 800; color: #1a1a1a; }
+
+  .tt-row { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #f2f2f2; position: relative; }
+  .tt-row:last-child { border-bottom: none; }
+  .tt-time { font-size: 10.5px; font-weight: 700; color: #1a1a1a; min-width: 36px; padding-top: 2px; font-variant-numeric: tabular-nums; }
+  .tt-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; border: 1.5px solid #aaa; margin-top: 4px; flex-shrink: 0; position: relative; }
+  .tt-dot::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); width: 1px; height: 20px; background: #e0e0e0; }
+  .tt-row:last-child .tt-dot::after { display: none; }
+  .tt-place { font-size: 11px; font-weight: 600; color: #1a1a1a; flex: 1; }
+  .tt-map { font-size: 9.5px; color: #888; text-decoration: underline; white-space: nowrap; padding-top: 2px; }
+
+  .tt-notice { background: #fafafa; border-radius: 6px; padding: 8px 10px; margin-top: 10px; }
+  .tt-notice-head { font-size: 10px; font-weight: 700; color: #444; margin-bottom: 4px; }
+  .tt-notice-body { font-size: 9.5px; color: #888; line-height: 1.6; }
+
+  /* ── 이미지 블록 (기획서 섹션 → 이미지 영역) ── */
+  .img-section-wrap {
+    border: 2px dashed #5a9a5a;
+    border-radius: 12px;
+    margin: 0 8px 8px;
+    overflow: hidden;
+    background: #f4faf4;
+  }
+  .img-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: #1a3a1a;
+  }
+  .img-section-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: #7fba7f; }
+  .img-section-title { font-size: 9px; letter-spacing: 0.04em; color: #a8d8a8; }
+  .img-section-badge {
+    font-size: 8px; color: #5a9a5a; background: #e0f0e0; border-radius: 3px;
+    padding: 1px 5px; font-weight: 700;
+  }
+
+  .img-block {
+    border-bottom: 1px dashed #c0ddc0; padding: 10px;
+  }
+  .img-block:last-child { border-bottom: none; }
+
+  .img-block-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .img-block-label { font-size: 9.5px; font-weight: 700; color: #2a6a2a; }
+  .img-block-size { font-size: 8.5px; color: #7ab07a; }
+
+  .img-block-thumb {
+    background: #d4ecd4; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; margin-bottom: 8px;
+  }
+  .img-block-thumb::after {
+    content: '🖼';
+    position: absolute; font-size: 20px; opacity: 0.3;
+  }
+  .img-block-thumb-label {
+    font-size: 9px; color: #4a8a4a; text-align: center; line-height: 1.5;
+    background: rgba(255,255,255,0.7); padding: 3px 8px; border-radius: 3px;
+    position: relative; z-index: 1;
+  }
+
+  .img-block-content { background: #eaf5ea; border-radius: 6px; padding: 8px 10px; }
+  .img-content-label { font-size: 8.5px; color: #7ab07a; font-weight: 700; margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .img-copy-title { font-size: 11px; font-weight: 700; color: #1a3a1a; margin-bottom: 3px; }
+  .img-copy-body { font-size: 10px; color: #3a6a3a; line-height: 1.6; margin-bottom: 4px; }
+  .img-char-count { font-size: 8.5px; color: #7ab07a; }
+
+  .img-section-anno {
+    background: #e0f0e0; padding: 8px 10px;
+    border-top: 1px dashed #c0ddc0;
+  }
+  .img-anno-row {
+    display: flex; gap: 6px; padding: 4px 0;
+    border-bottom: 1px solid #c8e8c8; font-size: 9.5px; color: #3a6a3a; line-height: 1.5;
+  }
+  .img-anno-row:last-child { border-bottom: none; }
+  .img-anno-num {
+    width: 14px; height: 14px; border-radius: 50%; background: #5a9a5a; color: #fff;
+    font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* 이미지 섹션 삽입 안내 화살표 */
+  .img-insert-notice {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; background: #e8f4e8; border-top: 1px solid #c0ddc0;
+    font-size: 9.5px; color: #4a8a4a;
+  }
+  .img-insert-arrow { font-size: 14px; }
+
+  /* 상품 특징 뱃지 */
+  .badge-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .badge { background: #f2f2f0; border-radius: 20px; padding: 4px 10px; font-size: 10px; color: #555; white-space: nowrap; }
+  .badge.warn { background: #fff4f0; color: #c04a2a; }
+
+  /* 상세설명 */
+  .desc-section {}
+  .desc-para { font-size: 11px; color: #555; line-height: 1.8; margin-bottom: 8px; }
+  .desc-para:last-child { margin-bottom: 0; }
+  .desc-more { font-size: 10.5px; color: #999; text-decoration: underline; margin-top: 8px; display: block; }
+
+  /* 코스 소개 */
+  .course-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .course-h { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+  .course-info { display: flex; gap: 10px; margin-bottom: 10px; }
+  .course-stat { font-size: 10px; color: #888; background: #f6f6f4; padding: 4px 8px; border-radius: 5px; }
+  .course-map { background: #E8E8E4; border-radius: 8px; height: 120px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .course-map::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 49.5%, #D8D8D4 49.5%, #D8D8D4 50.5%, transparent 50.5%), linear-gradient(45deg, transparent 49.5%, #D8D8D4 49.5%, #D8D8D4 50.5%, transparent 50.5%);
+  }
+  .course-map-label { font-size: 9.5px; color: #999; background: rgba(255,255,255,0.75); padding: 2px 8px; border-radius: 3px; position: relative; z-index: 1; }
+  .course-route { font-size: 10px; color: #555; line-height: 1.7; background: #f8f8f6; border-radius: 6px; padding: 8px 10px; margin-top: 8px; }
+
+  /* 이용자 난이도 */
+  .difficulty-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+  .diff-bar-item { background: #f8f8f6; border-radius: 6px; padding: 7px 8px; }
+  .diff-bar-emoji { font-size: 12px; margin-bottom: 2px; }
+  .diff-bar-label { font-size: 9px; color: #888; margin-bottom: 3px; }
+  .diff-bar-track { height: 4px; background: #e8e8e8; border-radius: 2px; overflow: hidden; }
+  .diff-bar-fill { height: 100%; background: #1a1a1a; border-radius: 2px; }
+  .diff-bar-count { font-size: 9px; color: #aaa; margin-top: 2px; }
+
+  /* 베스트포토 */
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 8px; }
+  .photo-thumb { background: #E0E0DC; border-radius: 4px; height: 70px; position: relative; overflow: hidden; }
+  .photo-thumb::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 49%, #D0D0CC 49%, #D0D0CC 51%, transparent 51%), linear-gradient(45deg, transparent 49%, #D0D0CC 49%, #D0D0CC 51%, transparent 51%);
+  }
+
+  /* 리뷰 */
+  .review-item { padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
+  .review-item:last-child { border-bottom: none; }
+  .review-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .review-user { font-size: 10px; font-weight: 700; color: #333; }
+  .review-date { font-size: 9.5px; color: #bbb; }
+  .review-text { font-size: 10.5px; color: #666; line-height: 1.6; }
+  .review-more { font-size: 10px; color: #999; text-decoration: underline; display: block; margin-top: 8px; }
+
+  /* 버스 소개 */
+  .bus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .bus-card { background: #f8f8f6; border-radius: 7px; padding: 10px; text-align: center; }
+  .bus-icon { font-size: 18px; margin-bottom: 4px; }
+  .bus-title { font-size: 10px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .bus-desc { font-size: 9.5px; color: #888; line-height: 1.5; }
+
+  /* 유의사항 */
+  .notice-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+  .notice-item { display: flex; gap: 6px; font-size: 10.5px; color: #666; line-height: 1.6; }
+  .notice-item::before { content: '·'; color: #bbb; flex-shrink: 0; }
+
+  /* 환불 규정 */
+  .refund-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f2f2f2; }
+  .refund-row:last-child { border-bottom: none; }
+  .refund-rate { font-size: 10.5px; color: #555; }
+  .refund-when { font-size: 10.5px; font-weight: 700; color: #1a1a1a; }
+  .refund-rate.red { color: #c04a2a; }
+
+  /* Bottom CTA */
+  .bottom-cta {
+    display: flex; align-items: stretch; height: 52px;
+    border-top: 1px solid #e8e8e8; background: #fff;
+  }
+  .cta-notify {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #555; border-right: 1px solid #e8e8e8; gap: 4px;
+  }
+  .cta-book {
+    flex: 1.2; display: flex; align-items: center; justify-content: center;
+    background: #1a1a1a; color: #fff; font-size: 12px; font-weight: 700;
+  }
+
+  /* Section 구분 여백 */
+  .sec-wrap { margin-bottom: 56px; }
+
+  /* ── 어노테이션 ── */
+  .anno-wrap { width: 300px; }
+  .anno {
+    display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    background: #fff; border: 1px solid #e8e8e8; margin-bottom: 8px;
+  }
+  .anno-num {
+    width: 20px; height: 20px; border-radius: 50%; background: #1a1a1a; color: #fff;
+    font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .anno-title { font-size: 11px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+  .anno-text { font-size: 10.5px; color: #666; line-height: 1.55; }
+  .anno-divider { height: 1px; background: #eee; margin: 12px 0; }
+  .anno-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #aaa; margin-bottom: 8px; }
+  .anno-section-label.green { color: #7fba7f; }
+
+  /* 반응형 */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .canvas { padding: 24px 16px; }
+    .anno-wrap { width: 100%; }
+  }
+
+  /* ── 실제 이미지 표시 (src에 경로 입력 시 플레이스홀더 대체) ── */
+  /* 사용법: src="" 안에 이미지 파일 경로를 입력하세요 */
+  /* 예) src="사유원_대표.jpg"  또는  src="./images/hero.jpg" */
+  .zone-img {
+    position: absolute; inset: 0; z-index: 2;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    border-radius: inherit;
+    display: block;
+  }
+  /* src가 비어있으면 숨김 — 경로를 입력하면 자동으로 나타남 */
+  .zone-img[src=""] { display: none; }
+  /* 이미지가 있으면 플레이스홀더 숨김 */
+  .zone-img:not([src=""]) ~ .wf-img-label { display: none; }
+  .zone-img:not([src=""]) ~ .img-block-thumb-label { display: none; }
+  .zone-img:not([src=""]) ~ * .wf-img::after { display: none; }
+</style>
+</head>
+<body>
+<div class="workspace">
+
+  <!-- ── 사이드바 ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Wireframe</div>
+    <div class="sidebar-title">사유원<br>상세페이지 v2-b</div>
+    <div class="sidebar-sub">Mid-fi · 기획서 이미지 섹션 포함</div>
+
+    <div class="version-badge">✦ <b>v2-b</b> 기획서 분기</div>
+
+    <div class="sidebar-section-label">섹션 구성</div>
+    <a class="nav-item active" href="#sec1"><span class="nav-num">1</span> 상단 정보 + 히어로</a>
+    <a class="nav-item nav-img" href="#secI1"><span class="nav-num">I-1</span> 기획서 섹션 1 · Intro</a>
+    <a class="nav-item nav-img" href="#secI2"><span class="nav-num">I-2</span> 기획서 섹션 2 · 일정</a>
+    <a class="nav-item nav-img" href="#secI3"><span class="nav-num">I-3</span> 기획서 섹션 3 · 이야기</a>
+    <a class="nav-item nav-img" href="#secI4"><span class="nav-num">I-4</span> 기획서 섹션 4 · 몽몽마방</a>
+    <a class="nav-item" href="#sec2"><span class="nav-num">2</span> Time Table</a>
+    <a class="nav-item" href="#sec3"><span class="nav-num">3</span> 상품 뱃지 + 상세설명</a>
+    <a class="nav-item" href="#sec4"><span class="nav-num">4</span> 코스 소개</a>
+    <a class="nav-item" href="#sec5"><span class="nav-num">5</span> 이용자 리뷰</a>
+    <a class="nav-item" href="#sec6"><span class="nav-num">6</span> 버스 소개</a>
+    <a class="nav-item" href="#sec7"><span class="nav-num">7</span> 유의사항 + 환불</a>
+    <a class="nav-item" href="#sec8"><span class="nav-num">8</span> Bottom CTA</a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">v2 → v2-b 변경점</div>
+    <div class="diff-item"><b class="green">추가</b> I-1 기획서 섹션1 이미지 블록</div>
+    <div class="diff-item"><b class="green">추가</b> I-2 기획서 섹션2 이미지 블록</div>
+    <div class="diff-item"><b class="green">추가</b> I-3 기획서 섹션3 이미지 블록</div>
+    <div class="diff-item"><b class="green">추가</b> I-4 기획서 섹션4 이미지 블록</div>
+    <div class="diff-item"><b>변경</b> 상품명 → [6:50출발] 사유원</div>
+    <div class="diff-item"><b>변경</b> 서브태그 → 수목원 슬로건</div>
+    <div class="diff-item"><b>변경</b> 탑승지 → 사당역/신갈</div>
+    <div class="diff-item"><b>변경</b> 타임테이블 6개 항목</div>
+    <div class="diff-item"><b>제거</b> 꼭 확인해주세요 배너</div>
+
+    <div class="sidebar-meta">
+      <div class="meta-row"><span>오픈 예정</span><span>2026. 04. 06</span></div>
+      <div class="meta-row"><span>v2-b 작성</span><span>2026. 04. 01</span></div>
+    </div>
+  </aside>
+
+  <!-- ── 캔버스 ── -->
+  <main class="canvas">
+    <div class="canvas-header">
+      <h1>사유원 · 상세페이지 와이어프레임 v2-b (기획서 이미지 섹션 포함)</h1>
+      <span>Mid-fi · 모바일 360px 기준</span>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 1 — 상단 정보 + 히어로 이미지
+    ══════════════════════════════════ -->
+    <div id="sec1" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 1 — 상단 정보 + 히어로</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+
+            <!-- 탑바 -->
+            <div class="phone-topbar">
+              <span class="topbar-back">‹</span>
+              <span class="topbar-title">사유원</span>
+              
+            </div>
+
+            <!-- 상단 정보 영역 -->
+            <div class="info-area">
+              <div class="info-row1">
+                <span class="region-tag">경상북도 군위군</span>
+              </div>
+              <div class="product-name">[6:50출발] 사유원</div>
+              <div class="product-sub">10만 평 수목원, 세계적 건축, 그리고 고요함</div>
+              <div class="info-row2">
+                <div class="info-date">2026년 4월 6일 (월) · 오전 6시 50분</div>
+                <div class="info-depart">사당역 6번 출구(출발) → 신갈 간이정류장(경유)</div>
+              </div>
+            </div>
+
+            <!-- 히어로 이미지 -->
+            <div style="padding: 0 16px 14px;">
+              <div class="wf-img" style="height: 220px; border-radius: 10px; position: relative;">
+                <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                <img src="./image/mogwa_3.png" alt="대표 이미지" class="zone-img">
+                <div class="wf-img-label">대표 이미지<br>사유원 전경 / 모과나무</div>
+                <div style="position:absolute; bottom:10px; right:10px; z-index:3; background:rgba(0,0,0,0.5); color:#fff; font-size:10px; padding:3px 8px; border-radius:4px;">+ 이미지 더보기</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 1 주석</div>
+          
+          
+      
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         이미지 섹션 I-1 — 기획서 섹션 1: Intro
+    ══════════════════════════════════ -->
+    <div id="secI1" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label" style="color:#7fba7f;">Image Section I-1 — 기획서 섹션 1: Intro</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <!-- 이미지 섹션 I-1 본체 -->
+              <div class="img-section-wrap">
+
+                <!-- ① 대표 이미지 + 헤드카피 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:150px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/naesimnakwon_1.png" alt="① 대표 이미지 + 헤드카피" class="zone-img">
+                    <div class="img-block-thumb-label">사유원 대표 뷰<br>모과나무 or 소요헌</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">누구나 철학자가 되는 하루</div>
+                    <div class="img-copy-body">밀반출되던 모과나무를 구하기 위해 시작된 산 속의 정원. 108그루의 모과나무를 포함한 아름다운 수목과 거장들의 건축물이 자리잡은 10만평의 정원을 걸으며 하루를 보내보세요.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+          
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label green">이미지 섹션 I-1 주석</div>
+          
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         이미지 섹션 I-2 — 기획서 섹션 2: 일정 타임라인
+    ══════════════════════════════════ -->
+    <div id="secI2" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label" style="color:#7fba7f;">Image Section I-2 — 기획서 섹션 2: 일정</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <div class="img-section-wrap">
+                
+
+                <!-- ④ 일정 타임라인 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label">④ 일정 타임라인</span>
+                    <span class="img-block-size">인포그래픽형 이미지</span>
+                  </div>
+                  <div class="img-block-thumb" style="height:180px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="" alt="④ 일정 타임라인 인포그래픽" class="zone-img">
+                    <div class="img-block-thumb-label" style="line-height:2;">
+                      06:50 사당역 6번 출구 출발<br>
+                      10:30 몽몽마방 도착 (점심식사)<br>
+                      11:30 사유원 입장 (자유 산책)<br>
+                      16:30 사유원 주차장 출발<br>
+                      20:00 사당역 도착
+                    </div>
+                  </div>
+                </div> 
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label green">이미지 섹션 I-2 주석</div>
+          </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         이미지 섹션 I-3 — 기획서 섹션 3: 사유원 이야기 5파트
+    ══════════════════════════════════ -->
+    <div id="secI3" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label" style="color:#7fba7f;">Image Section I-3 — 기획서 섹션 3: 사유원 이야기</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              
+
+              <div class="img-section-wrap">
+                
+
+                <!-- ⑤ 파트 1 — 사유원의 시작 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:150px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/mogwa_1.png" alt="⑤ 파트 1 — 사유원의 시작" class="zone-img">
+                    <div class="img-block-thumb-label">모과나무 클로즈업 or 고목<br>오랜 시간의 질감</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">모과나무를 지키려다 만들어진 정원</div>
+                    <div class="img-copy-body">일본으로 밀반출되던 수백 년 된 모과나무들. 사유원의 설립자는 아름다운 나무가 팔려나가는 것이 안타까워 모과나무를 사들였다고 합니다. 갈 곳을 잃은 나무를 위해 땅을 샀고, 그것이 사유원의 시작이 되었습니다.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+                <!-- ⑥ 파트 2 — 10만 평의 수목원 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:150px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/byeolyoodongcheon_1.png" alt="⑥ 파트 2 — 10만 평의 수목원" class="zone-img">
+                    <div class="img-block-thumb-label">수목원 항공 or 광각 전경<br>광활한 스케일</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">4그루의 모과나무에서, 10만 평 사유원으로</div>
+                    <div class="img-copy-body">30년의 시간 동안 나무 한 그루, 돌 하나씩 쌓아 올린 정원. 지금은 108그루의 모과나무를 비롯해 다양하고 아름다운 수목으로 사계절 내내 다른 얼굴을 보여주는 수목원이 되었습니다.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+                <!-- ⑧ 파트 4 — 체험하는 건축 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                  </div>
+                  <div class="img-block-thumb" style="height:230px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/soyohun_4.png" alt="⑧ 파트 4 — 체험하는 건축" class="zone-img">
+                    <div class="img-block-thumb-label">소대 전망 or 소요헌 내부<br>걷는 건축 체험 장면</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">오감으로 느끼는 공간</div>
+                    <div class="img-copy-body">명정을 걷고, 소대에 오르고, 소요헌에서 생각합니다. 공간 자체가 작품이고, 당신이 그 안의 일부가 됩니다. 건축물을 단순히 보기만 하지 않고 온전히 느끼는 하루가 됩니다.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+                <!-- ⑦ 파트 3 — 동서양 건축물 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:140px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/myeongjeong_1.png" alt="⑦ 파트 3 — 동서양 건축물" class="zone-img">
+                    <div class="img-block-thumb-label">소요헌 + 명정 + 현암 콜라주<br>동서양 건축 공존</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">쓰임이 없어 더욱 특별한 작품들</div>
+                    <div class="img-copy-body">승효상의 명정, 정기용의 소요헌, 알바로 시자의 소대. 아무런 쓸모를 갖지 않는 순수한 건축물을 만나는 것은 흔치 않은 경험입니다. 설립자의 철학을 담아 자연 속에서 조화롭게 공존하고 있는 작품들을 느껴보세요.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+
+                <!-- ⑨ 파트 5 — 일일 입장 제한 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:90px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="" alt="⑨ 파트 5 — 일일 입장 제한" class="zone-img">
+                    <div class="img-block-thumb-label"></div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">하루 입장객 제한 — 고즈넉함이 보장되는 이유</div>
+                    <div class="img-copy-body">사유원은 하루 방문객 수를 제한합니다. 붐비지 않는 정원에서, 온전히 당신만의 시간을 가질 수 있습니다.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label green">이미지 섹션 I-3 주석</div>
+          <div class="anno" style="border-color:#c0ddc0;background:#f4faf4;">
+            <div class="anno-num" style="background:#5a9a5a;">1</div>
+            <div class="anno-body">
+              <div class="anno-title" style="color:#1a3a1a;">사유원 이야기 5파트 — 스토리텔링</div>
+              <div class="anno-text"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         이미지 섹션 I-4 — 기획서 섹션 4: 식사
+    ══════════════════════════════════ -->
+    <div id="secI4" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label" style="color:#7fba7f;">Image Section I-4 — 기획서 섹션 4: 몽몽마방</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <div class="img-section-wrap">
+                
+
+                <!-- ⑩ 식당 소개 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:140px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="./image/mongmongmabang_1.png" alt="⑩ 식당 소개 — 몽몽마방" class="zone-img">
+                    <div class="img-block-thumb-label"></div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-title">몽몽마방 점심</div>
+                    <div class="img-copy-body">사유원의 한식 셰프가 지역 식재료로 만드는 담백한 한 끼. 입구에 위치한 식당 몽몽마방에서 이른 점심 식사 후 일정을 시작합니다.  </div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+                <!-- ⑪ 메뉴 안내 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-thumb" style="height:90px;">
+                    <!-- 경로 입력: src="" 안에 이미지 파일명 또는 경로를 입력하세요 -->
+                    <img src="" alt="" class="zone-img">
+                    <div class="img-block-thumb-label">음식 사진</div>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label"></div>
+                    <div class="img-copy-body">더덕비빔밥 혹은 통들깨메밀비빔국수 (택1)<br>녹두전</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+
+                <!-- ⑫ 유의사항 -->
+                <div class="img-block">
+                  <div class="img-block-header">
+                    <span class="img-block-label"></span>
+                    <span class="img-block-size"></span>
+                  </div>
+                  <div class="img-block-content">
+                    <div class="img-content-label">이미지에 포함되는 텍스트</div>
+                    <div class="img-copy-title">⚠ 유의사항</div>
+                    <div class="img-copy-body">사유원 내부는 음식물 반입이 불가합니다. 식사는 입장 전 몽몽마방에서 마쳐주세요.</div>
+                    <div class="img-char-count"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label green">이미지 섹션 I-4 주석</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 2 — Time Table
+    ══════════════════════════════════ -->
+    <div id="sec2" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 2 — Time Table</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:10px;">Time Table</div>
+                <div class="timetable-header">
+                </div>
+
+                <!-- 타임라인 -->
+                <div class="tt-row">
+                  <div class="tt-time">06:50</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">사당역 6번 출구 출발</div>
+                  <div class="tt-map">지도보기</div>
+                </div>
+                <div class="tt-row">
+                  <div class="tt-time">07:15</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">신갈 간이정류장 경유</div>
+                  <div class="tt-map">지도보기</div>
+                </div>
+                <div class="tt-row">
+                  <div class="tt-time">10:30</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">몽몽마방 도착 (점심식사)</div>
+                  <div class="tt-map">지도보기</div>
+                </div>
+                <div class="tt-row">
+                  <div class="tt-time">11:30</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">사유원 입장 (자유 산책)</div>
+                  <div class="tt-map">지도보기</div>
+                </div>
+                <div class="tt-row">
+                  <div class="tt-time">16:30</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">사유원 주차장 출발</div>
+                </div>
+                <div class="tt-row">
+                  <div class="tt-time">20:00</div>
+                  <div class="tt-dot"></div>
+                  <div class="tt-place">사당역 도착</div>
+                </div>
+
+                <!-- 예정 시간 안내 -->
+                <div class="tt-notice">
+                  <div class="tt-notice-head">⏰ 예정시간 변경 안내</div>
+                  <div class="tt-notice-body">
+                    버스가 예정보다 일찍/늦게 도착할 수 있습니다.<br>
+                    도착시간이 10분 이상 변경 시, 출발시간도 조정됩니다.<br>
+                    변경 사항은 카카오톡/문자로 알려드립니다.<br>
+                    변경된 시간을 꼭 확인하세요.<br>
+                    (미확인으로 인한 미탑승은 이용자 책임입니다.)<br>
+                    봄, 가을 성수기에 예정시간보다 더 많은 지연이 있을 수 있습니다.<br>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 2 주석</div>
+          
+            
+            
+      
+          
+        </div>
+
+      </div>
+    </div>
+
+
+
+    <!-- ══════════════════════════════════
+         섹션 3 — 상품 뱃지 + 상세설명
+    ══════════════════════════════════ -->
+    <div id="sec3" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 3 — 상품 뱃지 + 상세설명</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+              <!-- 상품 뱃지 -->
+              <div class="section">
+                <div class="badge-row">
+                  <span class="badge">28인승 프리미엄버스</span>
+                  <span class="badge">자유 일정</span>
+                  <span class="badge warn">가이드 없음</span>
+                  <span class="badge warn">입장료 포함</span>
+                  <span class="badge">중식 포함</span>
+                  <span class="badge">약 6시간</span>
+                </div>
+              </div>
+
+              
+
+              <!-- 상세 설명 -->
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:10px;">상세설명</div>
+                <div class="desc-para">사유원은 30년 넘게 가꾼 10만 평 수목원입니다. 일본으로 밀반출되던 수백 년 된 모과나무를 지키기 위해 땅을 사면서 시작된 정원이에요.</div>
+                <div class="desc-para">108그루의 모과나무와 승효상, 정기용 등 국내외 건축가들의 작품이 자연 속에 공존합니다.</div>
+                <div class="desc-para">하루 입장객 수를 제한해 붐비지 않는 고즈넉한 환경이 보장됩니다.</div>
+                <span class="desc-more">상세설명 더 보기 ↓</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 3 주석</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ══════════════════════════════════
+         섹션 4 — 코스 소개
+    ══════════════════════════════════ -->
+    <div id="sec4" class="sec-wrap">
+      <div class="phone-wrap">
+        <div class="phone-group">
+          <div class="phone-group-label">Section 4 — 코스 소개</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <div class="section">
+                <div class="course-head">
+                  <div class="wf-h2">코스 소개</div>
+                </div>
+                
+                <div class="course-map">
+                  <div class="course-map-label">사유원 지도 / 동선 안내</div>
+                </div>
+                <div class="course-route">
+                  A. 입구 → 소대 → 소요헌 → 풍설기천년 → 명정 → 현암 → 입구<br>
+                </div>
+              </div>
+
+              <!-- 이용자 난이도 -->
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:8px;">이용자 난이도</div>
+                <div class="difficulty-bars">
+                  
+                  
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 4 주석</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 5 — 이용자 리뷰 + 베스트포토
+    ══════════════════════════════════ -->
+    <div id="sec5" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 5 — 리뷰 + 베스트포토</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <!-- 베스트포토 -->
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:8px;">이용자 베스트포토</div>
+                <div class="photo-grid">
+                  <div class="photo-thumb"></div>
+                  <div class="photo-thumb"></div>
+                  <div class="photo-thumb"></div>
+                  <div class="photo-thumb"></div>
+                  <div class="photo-thumb"></div>
+                  <div class="photo-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;">전체보기</div>
+                </div>
+              </div>
+
+              <!-- 리뷰 -->
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:10px;">이용자 리뷰</div>
+                <div class="review-item">
+                  <div class="review-meta">
+                    <span class="review-user">abc******님</span>
+                    <span class="review-date">2026.03.20</span>
+                  </div>
+                  <div class="review-text">사유원 자체가 너무 좋았어요. 사람이 적어서 여유롭게 돌아볼 수 있었고, 건축물들이 정말 인상적이었습니다.</div>
+                </div>
+                <div class="review-item">
+                  <div class="review-meta">
+                    <span class="review-user">xyz******님</span>
+                    <span class="review-date">2026.03.15</span>
+                  </div>
+                  <div class="review-text">몽몽마방 밥이 생각보다 훨씬 맛있었어요. 알레버스 덕분에 편하게 다녀왔습니다.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 5 주석</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 6 — 버스 소개
+    ══════════════════════════════════ -->
+    <div id="sec6" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 6 — 버스 소개</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:8px;">버스 소개 (28인승 우등버스)</div>
+                <div class="bus-grid">
+                  <div class="bus-card">
+                    <div class="bus-icon">🛡</div>
+                    <div class="bus-title">안전 운행</div>
+                    <div class="bus-desc">프리미엄 28인승 우등버스로 안전하게 운행됩니다.</div>
+                  </div>
+                  <div class="bus-card">
+                    <div class="bus-icon">💺</div>
+                    <div class="bus-title">쾌적한 좌석</div>
+                    <div class="bus-desc">좌석 간 간격이 넓어 안락한 탑승이 가능합니다.</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 7 — 유의사항 + 환불규정
+    ══════════════════════════════════ -->
+    <div id="sec7" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 7 — 유의사항 + 환불</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:8px;">유의사항</div>
+                <div class="notice-list">
+                  <div class="notice-item">알레버스는 출발시간에 맞춰 출발합니다. 출발시간을 꼭 인지하시어 버스를 놓치는 일이 없도록 유의해 주세요.</div>
+                  <div class="notice-item">간식 및 식수는 개인이 지참하여야 합니다.</div>
+                  <div class="notice-item">인솔자 없이 자유일정으로 진행됩니다.</div>
+                  <div class="notice-item">이용자 분들의 휴식을 위해 차내에서 대화, 취식은 자제해 주시기 바랍니다.</div>
+                  <div class="notice-item">기사님의 휴식을 보장하기 위해 출발 1시간 전부터 버스 출입문이 개방됩니다.</div>
+                  <div class="notice-item">안전 운전 보장 및 타 이용자 휴식 방해 우려가 있을 경우, 알레버스 탑승이 거부될 수 있습니다. (예: 과음 상태)</div>
+                </div>
+              </div>
+
+
+              <div class="section">
+                <div class="wf-h2" style="margin-bottom:10px;">예약 및 환불규정</div>
+                <div class="refund-row">
+                  <span class="refund-when">출발 4일 전 이전</span>
+                  <span class="refund-rate">100% 환불</span>
+                </div>
+                <div class="refund-row">
+                  <span class="refund-when">출발 3일 전 ~ 전날 12시 이전</span>
+                  <span class="refund-rate">70% 환불</span>
+                </div>
+                <div class="refund-row">
+                  <span class="refund-when">전날 12시 이후 ~ 당일</span>
+                  <span class="refund-rate red">환불 불가</span>
+                </div>
+                <div style="font-size:10px;color:#aaa;margin-top:8px;">예약마감 출발 전날 오후 11시<br>인원 미달 취소: 예약 인원 15인 미만 시 취소(100% 환불)<br>- 출발 5일전 5명 미만시 취소 공지<br>- 출발 4일전 10명 미만시 취소 공지<br>- 출발 3일전 15명 미만시 취소 공지</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 7 주석</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         섹션 8 — Bottom CTA
+    ══════════════════════════════════ -->
+    <div id="sec8" class="sec-wrap">
+      <div class="phone-wrap">
+
+        <div class="phone-group">
+          <div class="phone-group-label">Section 8 — Bottom CTA (Sticky)</div>
+          <div class="phone">
+            <div class="phone-notch"><div class="notch-dot"></div></div>
+            <div class="phone-content">
+
+
+              <!-- CTA 날짜 + 좌석 -->
+              <div class="section" style="padding-bottom:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <div style="font-size:11px;color:#555;">2026년 4월 6일 (월)</div>
+                  <div style="font-size:10px;color:#e05555;font-weight:700;">12석 남음 / 총 28석</div>
+                </div>
+                <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:12px;">117,000원 (왕복)</div>
+              </div>
+
+              <!-- 2버튼 CTA -->
+              <div class="bottom-cta">
+                <div class="cta-notify">🔔 취소좌석 알림받기</div>
+                <div class="cta-book">예약 하기</div>
+              </div>
+
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 어노테이션 -->
+        <div class="anno-wrap">
+          <div class="anno-section-label">섹션 8 주석</div>
+          
+          
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item');
+  const sectionIds = ['sec1','sec2','secI1','secI2','secI3','secI4','sec3','sec4','sec5','sec6','sec7','sec8'];
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + 200;
+    sectionIds.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.offsetTop <= scrollY) {
+        navItems.forEach(n => n.classList.remove('active'));
+        navItems[i] && navItems[i].classList.add('active');
+      }
+    });
+  });
+
+  navItems.forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      const href = item.getAttribute('href');
+      const target = document.querySelector(href);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
